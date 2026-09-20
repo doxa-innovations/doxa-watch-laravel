@@ -1,18 +1,12 @@
 {
-    "name": "laravel/nightwatch",
-    "description": "The official Laravel Nightwatch package.",
+    "name": "doxa/watch",
+    "description": "Doxa Watch collector for Laravel: sensors and local agent. A minimal-diff fork of laravel/nightwatch.",
     "keywords": [
         "laravel",
         "monitoring",
         "insights"
     ],
-    "homepage": "https://nightwatch.laravel.com",
     "license": "MIT",
-    "support": {
-        "docs": "https://nightwatch.laravel.com/docs",
-        "issues": "https://github.com/laravel/nightwatch/issues",
-        "source": "https://github.com/laravel/nightwatch"
-    },
     "authors": [
         {
             "name": "Taylor Otwell",
@@ -56,8 +50,12 @@
         "symfony/mime": "^6.0|^7.0|^8.0",
         "symfony/var-dumper": "^6.0|^7.0|^8.0"
     },
+    "replace": {
+        "laravel/nightwatch": "self.version"
+    },
     "autoload": {
         "psr-4": {
+            "Doxa\\Watch\\": "doxa/",
             "Laravel\\Nightwatch\\": "src/"
         },
         "files": ["agent/helpers.php"]
@@ -106,11 +104,16 @@
         "test": [
             "@php vendor/bin/testbench package:purge-skeleton",
             "@php vendor/bin/phpunit --order-by=random"
+        ],
+        "test:doxa": [
+            "@php vendor/bin/testbench package:purge-skeleton",
+            "@php vendor/bin/phpunit --configuration=phpunit.doxa.xml.dist --order-by=random"
         ]
     },
     "extra": {
         "laravel": {
             "providers": [
+                "Doxa\\Watch\\DoxaWatchServiceProvider",
                 "Laravel\\Nightwatch\\NightwatchServiceProvider"
             ],
             "aliases": {
