@@ -5,8 +5,12 @@ namespace Doxa\Watch;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\CachesConfiguration;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Nightwatch\Core;
 use Laravel\Nightwatch\Facades\Nightwatch;
+use ReflectionProperty;
 use Throwable;
+
+use function dirname;
 
 /**
  * The Doxa layer on top of the upstream package.
@@ -36,6 +40,12 @@ final class DoxaWatchServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        try {
+            $this->markPackageFilesAsInternal();
+        } catch (Throwable $e) {
+            Nightwatch::unrecoverableExceptionOccurred($e);
+        }
+
         if (! $this->app->runningInConsole()) {
             return;
         }
@@ -45,5 +55,22 @@ final class DoxaWatchServiceProvider extends ServiceProvider
             Console\StatusCommand::class,
             Console\DeployCommand::class,
         ]);
+    }
+
+    /**
+     * Upstream recognises its own stack frames by the hard-coded install path
+     * `vendor/laravel/nightwatch`. This package installs to `vendor/doxa/watch`,
+     * so without this its middleware frames could be reported as the location
+     * of queries issued by framework code (e.g. the database session driver).
+     */
+    private function markPackageFilesAsInternal(): void
+    {
+        if (! $this->app->bound(Core::class)) {
+            return;
+        }
+
+        $location = $this->app->make(Core::class)->sensor->location;
+
+        (new ReflectionProperty($location, 'nightwatchPath'))->setValue($location, dirname(__DIR__));
     }
 }

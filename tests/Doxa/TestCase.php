@@ -7,6 +7,8 @@ use Laravel\Nightwatch\NightwatchServiceProvider;
 use ReflectionProperty;
 use Tests\TestCase as UpstreamTestCase;
 
+use function putenv;
+
 abstract class TestCase extends UpstreamTestCase
 {
     protected function setUp(): void
@@ -42,10 +44,11 @@ abstract class TestCase extends UpstreamTestCase
      */
     private function forgetServerVariables(): void
     {
-        unset(
-            $_SERVER['NIGHTWATCH_BASE_URL'], $_ENV['NIGHTWATCH_BASE_URL'],
-            $_SERVER['NIGHTWATCH_AGENT_LOG_LEVEL'], $_ENV['NIGHTWATCH_AGENT_LOG_LEVEL'],
-        );
+        foreach (['NIGHTWATCH_BASE_URL', 'NIGHTWATCH_AGENT_LOG_LEVEL'] as $variable) {
+            unset($_SERVER[$variable], $_ENV[$variable]);
+
+            putenv($variable);
+        }
     }
 
     protected function readPrivate(object $object, string $property): mixed
