@@ -93,7 +93,8 @@ and win over the cache.
 The layer therefore resolves the base URL in `register()` and **writes it to `$_SERVER['NIGHTWATCH_BASE_URL']`** (first non-empty
 of `DOXA_WATCH_BASE_URL`, `NIGHTWATCH_BASE_URL`, the cached `nightwatch.base_url`, then `https://watch-ingest.doxaplc.com`).
 It also stores it under `nightwatch.base_url` purely so that `config:cache` preserves a value that only exists in `.env`
-(upstream ignores that key). `DOXA_WATCH_AGENT_LOG_LEVEL` is published the same way.
+(upstream ignores that key). Trailing slashes are removed on the way: the agent trims them itself, but upstream's deploy command
+appends `/api/deployments` verbatim and `//api/deployments` is a 404. `DOXA_WATCH_AGENT_LOG_LEVEL` is published the same way.
 
 This is the whole trick: **no upstream file is patched and the PHAR did not have to be rebuilt.** Verified end to end with the
 committed PHAR against a fake server on loopback: `DOXA_WATCH_BASE_URL` + `DOXA_WATCH_TOKEN` + `watch:agent` produce

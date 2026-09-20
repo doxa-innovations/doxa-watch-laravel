@@ -10,6 +10,7 @@ use function array_merge;
 use function explode;
 use function is_array;
 use function is_string;
+use function rtrim;
 use function trim;
 
 /**
@@ -169,6 +170,10 @@ final class Configuration
                 break;
             }
         }
+
+        // The agent trims trailing slashes itself; upstream's deploy command appends "/api/deployments"
+        // verbatim, and "//api/deployments" is a 404 on the server.
+        $baseUrl = rtrim($baseUrl, '/');
 
         $this->config->set('nightwatch.base_url', $baseUrl);
 

@@ -144,6 +144,20 @@ class EnvironmentAliasesTest extends TestCase
         $this->assertSame('https://upstream.example.test', $_SERVER['NIGHTWATCH_BASE_URL']);
     }
 
+    #[WithEnv('DOXA_WATCH_BASE_URL', 'https://doxa.example.test//')]
+    public function test_trailing_slashes_are_removed_from_the_base_url(): void
+    {
+        // The agent trims the base URL itself, but upstream's deploy command appends "/api/deployments" verbatim.
+        $this->assertSame('https://doxa.example.test', $_SERVER['NIGHTWATCH_BASE_URL']);
+        $this->assertSame('https://doxa.example.test', config('nightwatch.base_url'));
+    }
+
+    #[WithEnv('NIGHTWATCH_BASE_URL', 'https://upstream.example.test/')]
+    public function test_trailing_slashes_are_removed_from_the_upstream_base_url(): void
+    {
+        $this->assertSame('https://upstream.example.test', $_SERVER['NIGHTWATCH_BASE_URL']);
+    }
+
     #[WithEnv('DOXA_WATCH_AGENT_LOG_LEVEL', 'verbose')]
     public function test_the_agent_log_level_is_published_for_the_agent(): void
     {
