@@ -129,7 +129,7 @@ and the default argument of `watch:deploy`. It is truncated to 255 bytes by upst
 
 ### 2.5 Install-path fix
 
-Upstream recognises its own stack frames by the hard-coded path `vendor/laravel/nightwatch` (`src/Location.php:31`). This package
+Upstream recognises its own stack frames by the hard-coded path `vendor/laravel/nightwatch` (`src/Location.php:41`). This package
 installs to `vendor/doxa/watch`, so its middleware frames could be reported as the source location of queries issued purely by
 framework code. `DoxaWatchServiceProvider::boot()` points the private `Location::$nightwatchPath` at the real package root by
 reflection. `tests/Doxa/LocationTest.php` fails if upstream renames that property.
