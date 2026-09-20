@@ -9,7 +9,7 @@ written without reading PHP.
 |---|---|
 | Derived from | `laravel/nightwatch` tag **`v1.30.2`**, commit **`123f0f24e3e3f4b732f04cdac3a0c63156f8efec`** (2026-09-18) |
 | Frame version | `v1` (`src/Payload.php:16`, `agent/src/Payload.php:11`) |
-| Method | Read from source and the package's own tests. Nothing here was verified against the hosted upstream service; no request was sent to it. |
+| Method | Read from source and the package's own tests. §1.2–§1.4, §2.2, §2.3 (framing, ACK, auth request, 10 s flush, gzip body, headers) and §3 were additionally exercised end to end with the committed PHAR against a fake server on loopback. Nothing here was verified against the hosted upstream service; no request was sent to it. |
 
 Conventions used below:
 
