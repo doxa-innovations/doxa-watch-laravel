@@ -986,7 +986,7 @@ uses MD5). The server treats `_group` as opaque; groups never match across colle
 
 Non-PHP collectors send `php_version: ""` and `laravel_version: ""`. `class` is the error's name (`TypeError`), `code` is
 `error.code ?? error.digest ?? ""`. `trace` keeps the §4.13 shape — `file` is `"{path relative to the project root}:{line}"`,
-`source` is the function name, `code` the ±5-line window. Vendor frames are those whose `file` starts with `node_modules/`,
+`code` is the ±5-line window, and `source` follows the PHP convention: entry 0 is the throw site with `source: ""`, and every later entry's `source` names the function that was called from that entry's location (the function the previous entry is in). Vendor frames are those whose `file` starts with `node_modules/`,
 `node:` or `.next/`.
 
 ### 9.4 Browser executions
