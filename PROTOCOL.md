@@ -953,3 +953,77 @@ Things the source at this tag does not settle. None of them block a compatible i
     fields regularly (`connection_type` arrived with Laravel 12.45 support). Re-run the field audit on every upstream merge
     **(re-verify on merge)**: `src/Sensors/*`, `src/SensorManager.php::fatalError`, `agent/src/agent.php`,
     `agent/src/Ingest.php`, `agent/src/IngestDetailsRepository.php`, `src/Console/DeployCommand.php`.
+
+---
+
+## 9. Doxa extensions (non-PHP collectors)
+
+Everything above describes the PHP package. This section is the contract for collectors that are **not** this package — at the
+moment the Node/Next.js SDK `doxa-watch` (repository `doxa-watch-node`). All additions are optional on the wire: a server that
+does not know them ignores unknown fields and drops unknown record types (§6), and the PHP package sends none of them.
+
+### 9.1 Transport without a local agent
+
+A non-PHP collector may skip §1 entirely and speak §2 itself: `POST /api/agent-auth` with the environment token, then gzip
+`{"records":[…]}` to `ingest_url`. It must honour `expires_in`, `refresh_in` and `stop` exactly as the agent does and must not
+retry a failed batch. It identifies itself with `user-agent: DoxaWatchNode/{sdk version} (next/{version}; node/{version})` — the
+server derives the environment's platform from the prefix (`NightwatchAgent/` → `laravel`, `DoxaWatchNode/` → `nextjs`).
+`nightwatch-server` keeps its name and meaning.
+
+### 9.2 `_group`
+
+Still 32 lowercase hex characters over the identity strings of §4, but the hash function is the collector's choice (the Node SDK
+uses MD5). The server treats `_group` as opaque; groups never match across collectors.
+
+### 9.3 `exception` — runtime fields
+
+| Field | Type | Notes |
+|---|---|---|
+| `runtime` | string | `"node"` \| `"browser"`; absent or `""` means PHP |
+| `runtime_version` | string ≤ 64 B | `22.11.0`, `Chrome 141` |
+| `framework` | string | `"next"`; absent or `""` means Laravel |
+| `framework_version` | string ≤ 64 B | `15.5.27` |
+
+Non-PHP collectors send `php_version: ""` and `laravel_version: ""`. `class` is the error's name (`TypeError`), `code` is
+`error.code ?? error.digest ?? ""`. `trace` keeps the §4.13 shape — `file` is `"{path relative to the project root}:{line}"`,
+`source` is the function name, `code` the ±5-line window. Vendor frames are those whose `file` starts with `node_modules/`,
+`node:` or `.next/`.
+
+### 9.4 Browser executions
+
+Records produced in a visitor's browser carry `execution_source: "browser"`, `execution_id` = `trace_id` = an id generated once
+per page load, `execution_preview: "PAGE {route pattern}"` and `execution_stage: "action"`. There is no parent record for a
+browser execution. The browser never holds the environment token: it reports to a same-origin route of the monitored app, which
+builds the records and sends them through §9.1.
+
+### 9.5 `web-vital` (v1) — new record type
+
+`timestamp` = when the metric was reported. `_group` = hash of `route_path`. No `execution_*` fields.
+
+| Field | Type | Notes |
+|---|---|---|
+| `deploy`, `server`, `trace_id`, `user` | | §4.1; `trace_id` = page-load id, shared with browser exceptions of that load |
+| `route_path` | string ≤ 255 B | route pattern, e.g. `/deals/[id]` |
+| `path` | string ≤ 2048 B | concrete path, no query string |
+| `name` | string enum | `"LCP"` \| `"INP"` \| `"CLS"` \| `"FCP"` \| `"TTFB"` |
+| `value` | float | milliseconds; unitless for `CLS` |
+| `rating` | string enum | `"good"` \| `"needs-improvement"` \| `"poor"` |
+| `navigation_type` | string ≤ 32 B | `navigate`, `reload`, `back-forward`, `prerender`, … |
+| `device` | string enum | `"desktop"` \| `"mobile"` \| `"tablet"` |
+| `browser` | string ≤ 64 B | name + major version |
+
+```json
+{"v":1,"t":"web-vital","timestamp":1759570000.123456,"deploy":"a1b2c3d","server":"crm-web-0",
+ "_group":"<md5('/deals/[id]')>","trace_id":"6f1c0f0e-3b7a-4f0e-9d51-0c2a4b7a9e11","user":"42",
+ "route_path":"/deals/[id]","path":"/deals/981","name":"LCP","value":1834.5,"rating":"good",
+ "navigation_type":"navigate","device":"desktop","browser":"Chrome 141"}
+```
+
+### 9.6 Differences in existing record types when sent by the Node SDK
+
+- `request`: `route_methods` is `[method]`; `route_action` is `page` \| `route` \| `action` \| `middleware` followed by the module
+  path; only `before_middleware`, `action` and `render` stages are non-zero; `payload` is always `""`.
+- `outgoing-request`: connection failures are recorded with `status_code: 0`.
+- `mail`: `failed` is real; `class` is `""` unless the application names the message.
+- `query`: `connection` is the database name; `connection_type` is `""`.
+- Records produced outside any execution use `execution_source: "command"` and `execution_preview: "node server"`.
