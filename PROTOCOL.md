@@ -959,7 +959,7 @@ Things the source at this tag does not settle. None of them block a compatible i
 ## 9. Doxa extensions (non-PHP collectors)
 
 Everything above describes the PHP package. This section is the contract for collectors that are **not** this package — at the
-moment the Node/Next.js SDK `doxa-watch` (repository `doxa-watch-node`). All additions are optional on the wire: a server that
+moment the Node/Next.js SDK `@doxa-innovations/watch` (repository `doxa-innovations/doxa-watch-node`). All additions are optional on the wire: a server that
 does not know them ignores unknown fields and drops unknown record types (§6), and the PHP package sends none of them.
 
 ### 9.1 Transport without a local agent
