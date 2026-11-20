@@ -20,7 +20,8 @@ permissions:
 jobs:
   publish:
     name: Publish release
-    runs-on: ubuntu-latest
+    # Doxa self-hosted runner (Sparky); set the repository variable CI_RUNNER=hosted to fall back to GitHub-hosted.
+    runs-on: ${{ vars.CI_RUNNER == 'hosted' && 'ubuntu-latest' || fromJSON('["self-hosted","Linux","X64"]') }}
     permissions:
       id-token: write
       contents: write
